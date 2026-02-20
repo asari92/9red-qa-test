@@ -34,13 +34,35 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        run: |
+          echo "Selected browser: ${{ github.event_name == 'workflow_dispatch' && inputs.browser || 'all (PR)' }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.browser }}" != "all" ]; then
+            npx playwright install --with-deps ${{ inputs.browser }}
+          else
+            npx playwright install --with-deps
+          fi
+        shell: bash
+
 
       - name: Run tests
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.browser }}" != "all" ]; then
+            echo "Running: ${{ inputs.browser }}"
             npx playwright test --project=${{ inputs.browser }}
           else
+            echo "Running: all projects"
             npx playwright test
           fi
         shell: bash
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### Run parameters" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "- browser: ${{ inputs.browser }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- browser: all (PR)" >> $GITHUB_STEP_SUMMARY
+          fi
+        shell: bash
+
