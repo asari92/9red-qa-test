@@ -9,3 +9,6 @@ playwright/playwright-report/
 Thumbs.db
 .idea/
 .vscode/
+npm-debug.log*
+.env
+.env.*
